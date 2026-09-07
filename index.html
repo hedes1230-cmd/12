@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VanGo — จองรถตู้สามจังหวัด</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root{
+  --primary:#167113; --deep:#0f5510; --secondary:#B9B3B3;
+  --yellow:#EFE76B; --yellow-d:#E2D84E;
+  --success:#12DADC; --danger:#EE2011; --warning:#E6E036; --info:#3A56D0;
+  --light:#969696; --dark:#000; --grey:#EFEFEE; --field:#EDEDED;
+  --ink:#17240f; --line:#e0e0dd;
+  --r-sm:10px; --r-md:14px; --r-lg:20px;
+  --sh-sm:0 1px 3px rgba(16,40,14,.08);
+  --sh-md:0 5px 16px rgba(16,50,14,.10);
+  --sh-lg:0 12px 30px rgba(6,35,8,.20);
+  --sh-btn:0 6px 16px -4px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Chakra Petch',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(90% 70% at 50% 0%,#1d6a1c 0%,#0a3a0d 55%,#062306 100%);
+  display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.device{width:400px;height:860px;background:#0a0a0a;border-radius:42px;padding:10px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);}
+.screen{position:relative;width:100%;height:100%;background:var(--grey);border-radius:33px;overflow:hidden;}
+@media(max-width:520px){
+  body{padding:0;background:var(--primary);}
+  .device{width:100vw;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none;}
+  .screen{border-radius:0;}
+}
+.view{position:absolute;inset:0;display:none;flex-direction:column;}
+.view.active{display:flex;animation:vin .3s cubic-bezier(.22,.9,.3,1);}
+@keyframes vin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sbar{display:flex;justify-content:space-between;font-size:12px;font-weight:600;padding:13px 20px 0;flex:none;position:relative;z-index:3;}
+.on-green{color:#fff;}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;z-index:2;}
+.body{padding:18px 16px 22px;}
+
+/* ============ GREEN PAGES ============ */
+.greenpage{background:
+  radial-gradient(120% 75% at 82% -8%, #2c9b28 0%, transparent 58%),
+  radial-gradient(95% 55% at -5% 105%, #0a4a0d 0%, transparent 62%),
+  linear-gradient(168deg,#1a8017 0%,#116013 45%,#0a4110 100%);}
+.greenpage::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.17) 1px, transparent 0);
+  background-size:22px 22px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.35) 45%,transparent 72%);
+  mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.35) 45%,transparent 72%);}
+.greenpage::after{content:"";position:absolute;top:-70px;right:-60px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(239,231,107,.30),transparent 68%);pointer-events:none;z-index:0;}
+
+.logomark{width:78px;height:78px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#F6EF8C,#DFD246);box-shadow:0 10px 26px -8px rgba(0,0,0,.55),inset 0 -3px 0 rgba(0,0,0,.10);}
+.logomark svg{width:42px;height:30px;fill:var(--primary);}
+.gtitle{color:#fff;font-size:29px;font-weight:700;text-align:center;letter-spacing:.2px;text-shadow:0 2px 12px rgba(0,0,0,.28);}
+.gsub{color:#fff;font-size:14.5px;font-weight:600;text-align:center;margin-top:3px;opacity:.96;}
+.gsub2{color:#fff;font-size:12.5px;text-align:center;opacity:.82;margin-top:3px;}
+.brand{color:var(--yellow);font-size:27px;font-weight:700;text-align:center;letter-spacing:.6px;
+  text-shadow:0 3px 16px rgba(239,231,107,.35);}
+.flab{color:#fff;font-size:12.5px;font-weight:500;margin:15px 0 6px;opacity:.94;}
+.finp{position:relative;}
+.finp input{width:100%;background:rgba(255,255,255,.94);border:1.5px solid transparent;border-radius:12px;
+  padding:14px 44px 14px 15px;font-family:inherit;font-size:14.5px;color:var(--ink);outline:none;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.07);transition:.18s;}
+.finp input::placeholder{color:#9a9a9a;}
+.finp input:focus{background:#fff;border-color:var(--yellow);box-shadow:0 0 0 4px rgba(239,231,107,.25);}
+.finp .ic{position:absolute;right:13px;top:50%;transform:translateY(-50%);width:20px;height:20px;fill:#8a8a8a;cursor:pointer;}
+.finp .div{position:absolute;right:41px;top:50%;transform:translateY(-50%);width:1px;height:20px;background:#d0d0d0;}
+.ybtn{width:100%;background:linear-gradient(180deg,#F5EE8A,#E3D852);color:#2a2a12;border:none;border-radius:26px;
+  padding:15px;font-family:inherit;font-size:16.5px;font-weight:700;cursor:pointer;letter-spacing:.2px;
+  box-shadow:0 10px 22px -8px rgba(0,0,0,.55),inset 0 -3px 0 rgba(0,0,0,.09);transition:.15s;}
+.ybtn:active{transform:translateY(2px);box-shadow:0 5px 12px -6px rgba(0,0,0,.5),inset 0 -1px 0 rgba(0,0,0,.09);}
+.linkrow{display:flex;justify-content:space-between;margin-top:11px;font-size:12.5px;color:#fff;}
+.linkrow span{cursor:pointer;opacity:.92;transition:.15s;padding:3px 0;}
+.linkrow span:active{opacity:.6;}
+.ordiv{display:flex;align-items:center;gap:10px;color:#fff;font-size:12.5px;margin:22px 0 16px;opacity:.9;}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);}
+.socs{display:flex;justify-content:center;gap:20px;}
+.soc{width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 8px 18px -6px rgba(0,0,0,.5);transition:.16s;overflow:hidden;}
+.soc:active{transform:scale(.92);}
+.soc svg{width:30px;height:30px;}
+.soc.x{background:#0b0b0b;} .soc.fb{background:#1877F2;}
+.steps{display:flex;gap:6px;margin:16px 0 6px;}
+.steps i{flex:1;height:5px;border-radius:4px;background:rgba(255,255,255,.26);transition:.25s;}
+.steps i.on{background:linear-gradient(90deg,#F6EF8C,#DFD246);box-shadow:0 0 12px rgba(239,231,107,.55);}
+.otpbox{background:rgba(255,255,255,.13);border:1.5px dashed rgba(239,231,107,.85);border-radius:16px;
+  padding:15px;text-align:center;margin:16px 0;backdrop-filter:blur(4px);}
+.otpbox .code{font-size:30px;font-weight:700;letter-spacing:8px;color:var(--yellow);text-shadow:0 2px 14px rgba(239,231,107,.4);}
+.otpbox .n{font-size:11px;color:rgba(255,255,255,.82);margin-top:5px;}
+.chk{display:flex;gap:9px;align-items:flex-start;color:#fff;font-size:12.5px;margin:16px 0 4px;cursor:pointer;line-height:1.6;opacity:.94;}
+.chk input{width:17px;height:17px;accent-color:var(--yellow);margin-top:2px;flex:none;}
+
+/* ============ HEADER ============ */
+.ghead{background:linear-gradient(165deg,#1c8419,#0e5211);color:#fff;flex:none;padding:2px 14px 16px;position:relative;z-index:2;}
+.view:not(.greenpage) .ghead{border-radius:0 0 22px 22px;box-shadow:0 8px 22px -8px rgba(8,55,12,.55);}
+.ghead .row{display:flex;align-items:center;gap:10px;padding-top:4px;}
+.back{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  background:rgba(255,255,255,.14);transition:.15s;}
+.back:active{background:rgba(255,255,255,.28);transform:scale(.93);}
+.back svg{width:21px;height:21px;fill:#fff;}
+.ghead h2{flex:1;text-align:center;font-size:19px;font-weight:700;margin-right:36px;letter-spacing:.2px;}
+
+/* ============ HOME ============ */
+.searchcard{background:linear-gradient(180deg,#FCFCFB,#EDEDEA);border-radius:22px;padding:13px;margin-bottom:24px;
+  box-shadow:0 16px 34px -14px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9);}
+.ybox{background:linear-gradient(180deg,#F3EC7C,#E7DE5C);border-radius:15px;overflow:hidden;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.07),0 2px 6px rgba(0,0,0,.10);}
+.yrow{display:flex;align-items:center;gap:11px;padding:11px 14px;}
+.yrow+.yrow{border-top:1px solid rgba(0,0,0,.09);}
+.yrow svg{width:19px;height:19px;fill:var(--primary);flex:none;}
+.yrow .fl{flex:1;min-width:0;}
+.yrow .lb{font-size:11px;color:#5c5b28;font-weight:500;}
+.yrow select,.yrow input{width:100%;background:transparent;border:none;font-family:inherit;font-size:14.5px;font-weight:700;
+  color:var(--ink);outline:none;padding:0;appearance:none;cursor:pointer;}
+.ysplit{display:flex;}
+.ysplit .yrow{flex:1;min-width:0;} .ysplit .yrow+.yrow{border-top:none;border-left:1px solid rgba(0,0,0,.09);}
+.ybox+.ybtn{margin-top:13px;}
+.slab{color:#fff;font-size:14px;font-weight:600;margin:0 0 12px 3px;letter-spacing:.2px;text-shadow:0 1px 6px rgba(0,0,0,.25);}
+.quick{display:flex;justify-content:space-between;margin-bottom:24px;}
+.qi{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;width:72px;transition:.15s;}
+.qi:active{transform:scale(.94);}
+.qi .c{width:48px;height:48px;border-radius:17px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#4C68DD,#2C41B8);box-shadow:0 8px 18px -7px rgba(28,45,150,.9),inset 0 -2px 0 rgba(0,0,0,.13);}
+.qi .c svg{width:23px;height:23px;fill:#fff;}
+.qi span{color:#fff;font-size:11.5px;opacity:.95;}
+.hots{display:flex;gap:12px;}
+.hot{flex:1;background:linear-gradient(180deg,#FBFBFA,#E9E9E6);border-radius:16px;padding:14px 10px;text-align:center;
+  cursor:pointer;box-shadow:0 10px 22px -12px rgba(0,0,0,.55);transition:.15s;}
+.hot:active{transform:translateY(2px) scale(.985);}
+.hot .v{width:38px;height:38px;border-radius:12px;margin:0 auto 9px;background:#E7F2E4;display:flex;align-items:center;justify-content:center;}
+.hot .v svg{width:26px;height:19px;fill:var(--primary);}
+.hot .r{font-size:12.5px;font-weight:700;color:var(--ink);}
+.hot .p{font-size:11.5px;color:#5f6b5c;margin-top:3px;}
+
+/* ============ BOTTOM NAV ============ */
+.nav{flex:none;background:linear-gradient(180deg,#F2EA78,#E4DB55);display:flex;justify-content:space-around;align-items:center;
+  padding:9px 5px 13px;border-radius:22px 22px 0 0;box-shadow:0 -8px 22px -10px rgba(0,0,0,.45);position:relative;z-index:3;}
+.ni{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:7px 11px;border-radius:13px;
+  border:none;background:transparent;font-family:inherit;transition:.18s;}
+.ni svg{width:22px;height:22px;fill:#3a3a20;transition:.18s;}
+.ni:active{transform:scale(.9);}
+.ni.on{background:rgba(255,255,255,.9);box-shadow:0 3px 8px -3px rgba(0,0,0,.3);}
+.ni.on svg{fill:var(--primary);}
+
+/* ============ RESULTS ============ */
+.vanmark{text-align:center;padding:12px 0 4px;}
+.vanmark .c{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;
+  background:linear-gradient(160deg,#F6EF8C,#DCCF3C);box-shadow:0 12px 28px -10px rgba(0,0,0,.6),inset 0 -3px 0 rgba(0,0,0,.10);}
+.vanmark .c svg{width:44px;height:31px;fill:var(--primary);}
+.vanmark b{display:block;color:var(--yellow);font-size:21px;font-weight:700;margin-top:8px;letter-spacing:.5px;
+  text-shadow:0 3px 14px rgba(239,231,107,.35);}
+.wlab{color:#fff;font-size:13.5px;font-weight:600;margin:16px 0 8px 3px;display:flex;align-items:center;justify-content:space-between;
+  text-shadow:0 1px 6px rgba(0,0,0,.25);}
+.wlab svg{width:26px;height:19px;fill:#fff;cursor:pointer;opacity:.9;padding:3px;border-radius:8px;background:rgba(255,255,255,.14);box-sizing:content-box;}
+.wlab svg:active{background:rgba(255,255,255,.3);}
+.fromto{background:#fff;border-radius:16px;padding:12px 15px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 10px 24px -14px rgba(0,0,0,.6);}
+.fromto .s{flex:1;min-width:0;}
+.fromto .k{font-size:11px;color:#79857a;}
+.fromto .v{font-size:15.5px;font-weight:700;color:var(--ink);}
+.fromto .sw{width:36px;height:36px;border-radius:12px;background:#E7F2E4;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex:none;transition:.15s;}
+.fromto .sw:active{transform:rotate(180deg) scale(.9);}
+.fromto .sw svg{width:19px;height:19px;fill:var(--primary);}
+.fromto .r{text-align:right;}
+.trip{background:#fff;border-radius:16px;padding:13px 16px;margin-bottom:12px;box-shadow:0 8px 20px -12px rgba(0,0,0,.55);transition:.15s;}
+.trip .t1{display:flex;align-items:flex-start;gap:6px;}
+.trip .tm{flex:1 1 0;min-width:0;}
+.trip .tm b{font-size:16px;font-weight:700;color:var(--ink);display:block;letter-spacing:.3px;}
+.trip .tm span{font-size:10.5px;color:#77837a;}
+.trip .pr{text-align:right;flex:0 0 auto;min-width:70px;padding-left:4px;}
+.trip .pr b{font-size:16px;font-weight:700;color:var(--primary);}
+.trip .pr span{display:block;font-size:10.5px;color:#77837a;}
+.troute{display:flex;align-items:center;gap:7px;margin:11px 0;}
+.troute .dot{width:9px;height:9px;border-radius:50%;background:var(--primary);flex:none;box-shadow:0 0 0 3px rgba(22,113,19,.14);}
+.troute .pin{width:9px;height:9px;border-radius:50%;background:var(--danger);flex:none;box-shadow:0 0 0 3px rgba(238,32,17,.14);}
+.troute .ln{flex:1;height:0;border-top:2px dashed #d9ddd8;}
+.troute em{width:28px;height:28px;border-radius:50%;background:#E7F2E4;display:flex;align-items:center;justify-content:center;flex:none;}
+.troute em svg{width:17px;height:12px;fill:var(--primary);}
+.t2{display:flex;align-items:center;gap:7px;}
+.bdg{font-size:11px;font-weight:600;padding:6px 10px;border-radius:9px;white-space:nowrap;}
+.bdg.g{background:#F0F1EF;color:#4b554a;}
+.bdg.s{background:#E4F3E0;color:var(--primary);}
+.bdg.i{background:#E6EAFB;color:var(--info);}
+.pick{margin-left:auto;background:linear-gradient(180deg,#1E8B1A,#125E11);color:#fff;border:none;border-radius:11px;
+  padding:9px 17px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;flex:none;
+  box-shadow:0 6px 14px -6px rgba(16,80,14,.85);transition:.15s;}
+.pick:active{transform:translateY(2px);box-shadow:0 3px 8px -5px rgba(16,80,14,.85);}
+#routeMap{height:160px;border-radius:16px;overflow:hidden;background:#dfe6dc;margin-bottom:12px;display:none;
+  box-shadow:0 10px 24px -14px rgba(0,0,0,.6);}
+#routeMap.show{display:block;}
+.mapinfo{background:#fff;border-radius:14px;padding:10px 15px;display:none;justify-content:space-between;align-items:center;
+  font-size:12px;margin-bottom:12px;box-shadow:0 8px 20px -14px rgba(0,0,0,.6);}
+.mapinfo.show{display:flex;}
+.mapinfo b{color:var(--primary);font-size:14px;}
+
+/* ============ SEATS ============ */
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.slot{background:#fff;border:2px solid var(--primary);border-radius:14px;padding:14px;text-align:center;font-size:17px;
+  font-weight:700;color:var(--primary);cursor:pointer;transition:.16s;box-shadow:0 4px 12px -8px rgba(0,0,0,.5);}
+.slot:active{transform:scale(.97);}
+.slot.on{background:linear-gradient(180deg,#1E8B1A,#125E11);color:#fff;border-color:transparent;
+  box-shadow:0 10px 20px -9px rgba(16,80,14,.9);}
+.seatwrap{background:linear-gradient(180deg,#DEDEDB,#D2D2CE);border-radius:18px;padding:15px 13px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.10);}
+.seatgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.seat{position:relative;aspect-ratio:1/.6;border-radius:11px;background:linear-gradient(180deg,#fff,#f4f4f2);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#5b6459;cursor:pointer;
+  user-select:none;transition:.14s;box-shadow:0 2px 5px rgba(0,0,0,.12),inset 0 -2px 0 rgba(0,0,0,.06);}
+.seat::before{content:"";position:absolute;left:14%;right:14%;top:6px;height:3px;border-radius:3px;background:rgba(0,0,0,.07);}
+.seat:active{transform:scale(.94);}
+.seat.sel{background:linear-gradient(180deg,#F5EE86,#E3D852);color:#2f2f14;
+  box-shadow:0 5px 13px -4px rgba(180,165,35,.75),inset 0 -2px 0 rgba(0,0,0,.10);}
+.seat.taken{background:linear-gradient(180deg,#333,#0e0e0e);color:#fff;cursor:not-allowed;
+  box-shadow:inset 0 -2px 0 rgba(255,255,255,.06);}
+.seat.taken::before{background:rgba(255,255,255,.14);}
+.seat.drv{background:#fff;border-radius:30px;color:#6a736a;cursor:default;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,.10);}
+.seat.drv::before{display:none;}
+.seat.gap{background:transparent;cursor:default;box-shadow:none;}
+.seat.gap::before{display:none;}
+.legend{display:flex;gap:15px;align-items:center;margin-top:16px;font-size:11.5px;color:#4a544a;}
+.legend i{width:20px;height:15px;border-radius:5px;display:inline-block;margin-right:5px;vertical-align:-3px;
+  border:1px solid rgba(0,0,0,.14);}
+.sumline{margin-top:10px;font-size:11.5px;color:#4a544a;}
+.footbar{flex:none;background:#fff;padding:13px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 -6px 18px -10px rgba(0,0,0,.4);position:relative;z-index:2;}
+.footbar .l{flex:1;}
+.footbar .l span{font-size:11px;color:#77837a;display:block;}
+.footbar .l b{font-size:20px;color:var(--primary);}
+.gbtn{background:linear-gradient(180deg,#1E8B1A,#125E11);color:#fff;border:none;border-radius:14px;padding:14px 22px;
+  font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;
+  box-shadow:0 10px 22px -10px rgba(16,80,14,.95),inset 0 -3px 0 rgba(0,0,0,.14);transition:.15s;}
+.gbtn:active{transform:translateY(2px);box-shadow:0 5px 12px -8px rgba(16,80,14,.9);}
+.gbtn.full{width:100%;}
+.wbtn{width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:14px;
+  font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px -12px rgba(0,0,0,.5);transition:.15s;}
+.wbtn:active{transform:translateY(2px);}
+.rbtn{width:100%;background:linear-gradient(180deg,#F4392A,#D91706);color:#fff;border:none;border-radius:14px;padding:14px;
+  font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;
+  box-shadow:0 10px 22px -10px rgba(200,25,10,.9),inset 0 -3px 0 rgba(0,0,0,.14);transition:.15s;}
+.rbtn:active{transform:translateY(2px);}
+
+/* ============ PAYMENT ============ */
+.pmgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px;}
+.pm{position:relative;background:#fff;border:1.5px solid #cfe0cb;border-radius:16px;padding:17px 8px;text-align:center;
+  cursor:pointer;transition:.16s;box-shadow:0 6px 16px -12px rgba(0,0,0,.5);}
+.pm:active{transform:scale(.97);}
+.pm.on{border-color:var(--primary);background:linear-gradient(180deg,#F2F9F0,#E6F2E3);
+  box-shadow:0 10px 22px -12px rgba(16,80,14,.75);}
+.pm.on::after{content:"✓";position:absolute;top:9px;right:10px;width:20px;height:20px;border-radius:50%;
+  background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.pm .ic{height:34px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.pm .ic svg{width:34px;height:30px;}
+.pm span{font-size:12.5px;font-weight:600;color:var(--ink);}
+.ppcard{background:#fff;border:1.5px solid #cfe0cb;border-radius:18px;padding:18px;text-align:center;
+  box-shadow:0 12px 28px -16px rgba(0,0,0,.55);}
+.pplogo{display:inline-flex;align-items:center;background:#fff;border:1px solid #1a3a8f;border-radius:5px;padding:3px 8px;
+  font-size:11px;font-weight:700;color:#1a3a8f;margin-bottom:13px;}
+.qrbox{width:196px;height:196px;margin:0 auto;background:#fff;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;padding:8px;box-shadow:0 0 0 1px #e6e6e6,0 6px 16px -10px rgba(0,0,0,.5);}
+.qrbox img,.qrbox canvas,.qrbox svg{max-width:100%;height:auto;}
+.ppname{font-size:13px;color:#5c665c;margin-top:11px;}
+.ppnote{font-size:13.5px;font-weight:700;color:var(--ink);margin-top:9px;}
+
+/* ============ TICKET ============ */
+.tick{position:relative;background:#fff;border-radius:20px;box-shadow:0 16px 36px -18px rgba(0,0,0,.6);overflow:hidden;}
+.tick-top{padding:16px 16px 10px;}
+.tick-sep{position:relative;height:24px;}
+.tick-sep::before{content:"";position:absolute;left:18px;right:18px;top:50%;border-top:2px dashed #dcdcd8;}
+.tick-sep i{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;
+  background:var(--grey);box-shadow:inset 0 1px 3px rgba(0,0,0,.14);}
+.tick-sep i:first-child{left:-12px;} .tick-sep i:last-child{right:-12px;}
+.tick-bot{padding:2px 16px 16px;}
+.tickbadge{position:absolute;top:12px;right:12px;background:linear-gradient(180deg,#1E8B1A,#125E11);color:#fff;font-size:11px;
+  font-weight:700;padding:5px 11px;border-radius:9px;box-shadow:0 5px 12px -6px rgba(16,80,14,.9);}
+.tickbrand{display:flex;align-items:center;gap:9px;margin:2px 0 13px;}
+.tickbrand .c{width:38px;height:38px;border-radius:12px;background:linear-gradient(160deg,#1E8B1A,#125E11);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 7px 15px -7px rgba(16,80,14,.9);}
+.tickbrand .c svg{width:23px;height:17px;fill:#fff;}
+.tickbrand b{font-size:18px;color:var(--primary);letter-spacing:.4px;}
+.tdet{background:linear-gradient(180deg,#F5F6F4,#EDEEEB);border-radius:12px;padding:12px 14px;font-size:12.5px;
+  line-height:1.8;color:#414a40;}
+.tdet .h{font-weight:700;color:var(--ink);margin-bottom:2px;}
+.tickqr{width:154px;height:154px;margin:12px auto 12px;display:flex;align-items:center;justify-content:center;
+  background:#fff;border-radius:12px;padding:6px;box-shadow:0 0 0 1px #ececec;}
+.tickqr img,.tickqr canvas,.tickqr svg{max-width:100%;height:auto;}
+.tstat{background:linear-gradient(180deg,#F3EC7E,#E4DB58);border-radius:11px;padding:10px 13px;font-size:12.5px;
+  font-weight:700;color:#2f2f14;display:flex;align-items:center;gap:8px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.07);}
+.tstat svg{width:18px;height:18px;fill:var(--primary);flex:none;}
+
+/* ============ HISTORY ============ */
+.hcard{background:#fff;border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  box-shadow:0 8px 20px -14px rgba(0,0,0,.55);transition:.15s;}
+.hcard:active{transform:scale(.99);}
+.hcard .v{width:46px;height:46px;border-radius:14px;background:linear-gradient(160deg,#1E8B1A,#125E11);display:flex;
+  align-items:center;justify-content:center;flex:none;box-shadow:0 7px 15px -8px rgba(16,80,14,.95);}
+.hcard .v svg{width:27px;height:20px;fill:#fff;}
+.hcard .m{flex:1;min-width:0;}
+.hcard .rt{font-size:14.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.hcard .rt svg{width:16px;height:11px;fill:var(--primary);}
+.hcard .d1{font-size:11.5px;color:#5f6b5c;margin-top:4px;}
+.hcard .d2{font-size:11.5px;color:#5f6b5c;}
+.hcall{width:40px;height:40px;border-radius:50%;background:#E4F3E0;display:flex;align-items:center;justify-content:center;
+  flex:none;text-decoration:none;transition:.15s;}
+.hcall:active{transform:scale(.9);background:#d3ebcd;}
+.hcall svg{width:19px;height:19px;fill:var(--primary);}
+.empty{text-align:center;color:#78837a;padding:64px 20px;}
+.empty svg{width:56px;height:56px;fill:#c7cfc6;margin-bottom:12px;}
+
+/* ============ NOTIFY ============ */
+.nmap{background:#fff;border-radius:16px;padding:9px;margin-bottom:15px;box-shadow:0 10px 24px -16px rgba(0,0,0,.55);}
+.nmap svg{width:100%;height:auto;display:block;border-radius:11px;}
+.nhead{background:linear-gradient(180deg,#F3EC7E,#E4DB58);border-radius:12px 12px 0 0;padding:10px 14px;font-size:13.5px;
+  font-weight:700;color:#2f2f14;}
+.nbody{background:#fff;border-radius:0 0 12px 12px;padding:12px 14px;font-size:12.5px;line-height:1.9;color:#414a40;
+  box-shadow:0 8px 20px -16px rgba(0,0,0,.5);}
+.ntext{font-size:12.5px;line-height:1.95;color:#4d574c;margin:16px 3px;}
+
+/* ============ PROFILE ============ */
+.avcard{background:#fff;border-radius:20px;padding:28px 18px;text-align:center;box-shadow:0 14px 32px -18px rgba(0,0,0,.6);}
+.avcard .av{width:96px;height:96px;border-radius:50%;background:linear-gradient(160deg,#E6E6E3,#D2D2CE);display:flex;
+  align-items:center;justify-content:center;margin:0 auto 18px;overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.12);}
+.avcard .av svg{width:52px;height:52px;fill:#8f978e;}
+.avcard .av img{width:100%;height:100%;object-fit:cover;}
+.avcard p{font-size:15.5px;font-weight:600;color:var(--ink);margin-bottom:22px;}
+.menu{background:#fff;border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 10px 26px -16px rgba(0,0,0,.55);}
+.mi{display:flex;align-items:center;gap:12px;padding:15px 16px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;transition:.14s;}
+.mi:active{background:#f4f6f3;}
+.mi+.mi{border-top:1px solid #eeeeea;}
+.mi svg{width:19px;height:19px;fill:var(--primary);flex:none;}
+.mi .ar{margin-left:auto;color:#b6bdb5;font-size:18px;}
+.pcard{background:#fff;border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 10px 26px -16px rgba(0,0,0,.55);}
+.pcard h4{font-size:14.5px;color:var(--primary);margin-bottom:11px;}
+.pcard .lab{font-size:11.5px;color:#77837a;margin:10px 0 5px;}
+.pcard input{width:100%;background:#F7F8F6;border:1.5px solid var(--line);border-radius:11px;padding:12px 13px;
+  font-family:inherit;font-size:14px;outline:none;transition:.16s;}
+.pcard input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(22,113,19,.12);}
+.uinfo{display:flex;align-items:center;gap:13px;}
+.uinfo .av{width:58px;height:58px;border-radius:50%;background:linear-gradient(160deg,#E6E6E3,#D2D2CE);display:flex;
+  align-items:center;justify-content:center;flex:none;overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,.12);}
+.uinfo .av svg{width:32px;height:32px;fill:#8f978e;}
+.uinfo .av img{width:100%;height:100%;object-fit:cover;}
+.uinfo b{font-size:16.5px;display:block;color:var(--ink);}
+.uinfo span{font-size:12px;color:#77837a;}
+
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(22px);
+  background:rgba(14,20,13,.94);backdrop-filter:blur(8px);color:#fff;padding:12px 22px;border-radius:26px;
+  font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.28s cubic-bezier(.22,.9,.3,1);
+  z-index:999;max-width:88%;text-align:center;box-shadow:0 14px 30px -12px rgba(0,0,0,.7);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="device"><div class="screen">
+
+<!-- ==================== LOGIN ==================== -->
+<div class="view greenpage" id="login">
+  <div class="sbar on-green"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="scroll"><div class="body">
+    <div class="logomark"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div>
+    <div class="gtitle">เข้าสู่ระบบ</div>
+    <div class="gsub">จองรถตู้สามจังหวัด</div>
+    <div class="gsub2">ยินดีต้อนรับจองรถตู้สามจังหวัด</div>
+    <div class="brand" style="margin:26px 0 22px">VanGo</div>
+    <div class="finp" style="margin-bottom:12px">
+      <input id="loginId" type="text" placeholder="อีเมลหรือเบอร์โทรศัพท์">
+      <div class="div"></div>
+      <svg class="ic" viewBox="0 0 24 24"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1z"/></svg>
+    </div>
+    <div class="finp">
+      <input id="loginPw" type="password" placeholder="รหัสผ่าน">
+      <svg class="ic" onclick="pw('loginPw')" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.2 4.2-10.6 6.6a.9.9 0 0 0 0 .8C2.8 14.8 6.8 19 12 19s9.2-4.2 10.6-6.6a.9.9 0 0 0 0-.8C21.2 9.2 17.2 5 12 5Zm0 11.4A4.4 4.4 0 1 1 12 7.6a4.4 4.4 0 0 1 0 8.8Zm0-2A2.4 2.4 0 1 0 12 9.6a2.4 2.4 0 0 0 0 4.8Z"/><path d="M3 3.7 20.3 21 21.7 19.6 4.4 2.3z"/></svg>
+    </div>
+    <div class="linkrow"><span onclick="openForgot()">ลืมรหัสผ่าน?</span><span onclick="go('register')">สมัครสมาชิก</span></div>
+    <button class="ybtn" style="margin-top:20px" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="ordiv">หรือเข้าสู่ระบบด้วย</div>
+    <div class="socs">
+      <div class="soc" onclick="googleLogin()" title="Google"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></div>
+      <div class="soc x" onclick="xLogin()" title="X"><svg viewBox="0 0 24 24"><path fill="#fff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+      <div class="soc fb" onclick="facebookLogin()" title="Facebook"><svg viewBox="0 0 24 24"><path fill="#fff" d="M15.12 5.32H17V2.14A26.11 26.11 0 0 0 14.26 2C11.54 2 9.68 3.66 9.68 6.7v2.62H6.61v3.56h3.07V22h3.68v-9.12h3.06l.46-3.56h-3.52V7.05c0-1.05.28-1.73 1.76-1.73Z"/></svg></div>
+    </div>
+    <div class="linkrow" style="justify-content:center;margin-top:22px"><span onclick="guestIn()">ทดลองใช้โดยไม่เข้าสู่ระบบ →</span></div>
+  </div></div>
+</div>
+
+<!-- ==================== REGISTER ==================== -->
+<div class="view greenpage" id="register">
+  <div class="sbar on-green"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="scroll"><div class="body">
+    <div class="logomark"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div>
+    <div class="gtitle">สมัครสมาชิก</div>
+    <div class="brand" style="margin:34px 0 26px">VanGo</div>
+    <div class="flab">ชื่อ-นามสกุล</div>
+    <div class="finp"><input id="regName" type="text"></div>
+    <div class="flab">อีเมล/เบอร์โทร</div>
+    <div class="finp"><input id="regId" type="text"></div>
+    <div class="flab">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</div>
+    <div class="finp"><input id="regPw" type="password">
+      <svg class="ic" onclick="pw('regPw')" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.2 4.2-10.6 6.6a.9.9 0 0 0 0 .8C2.8 14.8 6.8 19 12 19s9.2-4.2 10.6-6.6a.9.9 0 0 0 0-.8C21.2 9.2 17.2 5 12 5Zm0 11.4A4.4 4.4 0 1 1 12 7.6a4.4 4.4 0 0 1 0 8.8Zm0-2A2.4 2.4 0 1 0 12 9.6a2.4 2.4 0 0 0 0 4.8Z"/><path d="M3 3.7 20.3 21 21.7 19.6 4.4 2.3z"/></svg></div>
+    <div class="flab">ยืนยันรหัสผ่าน</div>
+    <div class="finp"><input id="regPw2" type="password">
+      <svg class="ic" onclick="pw('regPw2')" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.2 4.2-10.6 6.6a.9.9 0 0 0 0 .8C2.8 14.8 6.8 19 12 19s9.2-4.2 10.6-6.6a.9.9 0 0 0 0-.8C21.2 9.2 17.2 5 12 5Zm0 11.4A4.4 4.4 0 1 1 12 7.6a4.4 4.4 0 0 1 0 8.8Zm0-2A2.4 2.4 0 1 0 12 9.6a2.4 2.4 0 0 0 0 4.8Z"/><path d="M3 3.7 20.3 21 21.7 19.6 4.4 2.3z"/></svg></div>
+    <label class="chk"><input type="checkbox" id="regTerms"><span>ฉันยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว</span></label>
+    <button class="ybtn" style="margin-top:22px" onclick="doRegister()">สมัครสมาชิก</button>
+    <div class="linkrow" style="justify-content:center;margin-top:14px"><span onclick="go('login')">มีบัญชีแล้ว? เข้าสู่ระบบ</span></div>
+  </div></div>
+</div>
+
+<!-- ==================== FORGOT ==================== -->
+<div class="view greenpage" id="forgot">
+  <div class="sbar on-green"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="scroll"><div class="body">
+    <div class="logomark"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div>
+    <div class="gtitle">ลืมรหัสผ่าน</div>
+    <div class="brand" style="margin:14px 0 4px">VanGo</div>
+    <div class="steps"><i id="fs1" class="on"></i><i id="fs2"></i><i id="fs3"></i></div>
+    <div id="fstep1">
+      <div class="gsub2" style="margin:12px 0">กรอกอีเมลหรือเบอร์โทรที่ใช้สมัคร เพื่อขอรหัสยืนยัน</div>
+      <div class="flab">อีเมล/เบอร์โทร</div>
+      <div class="finp"><input id="fgId" type="text"></div>
+      <button class="ybtn" style="margin-top:22px" onclick="forgotStart()">ขอรหัสยืนยัน (OTP)</button>
+    </div>
+    <div id="fstep2" style="display:none">
+      <div class="gsub2" style="margin:12px 0">กรอกรหัสยืนยัน 6 หลัก</div>
+      <div class="otpbox"><div class="code" id="fgShow"></div><div class="n">โหมดทดลอง — ระบบจริงส่งทาง SMS / อีเมล</div></div>
+      <div class="flab">รหัส OTP</div>
+      <div class="finp"><input id="fgOtp" type="tel" maxlength="6"></div>
+      <button class="ybtn" style="margin-top:22px" onclick="forgotVerify()">ยืนยันรหัส</button>
+      <div class="linkrow" style="justify-content:center;margin-top:12px"><span onclick="forgotStart()">ส่งรหัสอีกครั้ง</span></div>
+    </div>
+    <div id="fstep3" style="display:none">
+      <div class="gsub2" style="margin:12px 0">ตั้งรหัสผ่านใหม่อย่างน้อย 6 ตัวอักษร</div>
+      <div class="flab">รหัสผ่านใหม่</div>
+      <div class="finp"><input id="fgPw" type="password">
+        <svg class="ic" onclick="pw('fgPw')" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.2 4.2-10.6 6.6a.9.9 0 0 0 0 .8C2.8 14.8 6.8 19 12 19s9.2-4.2 10.6-6.6a.9.9 0 0 0 0-.8C21.2 9.2 17.2 5 12 5Zm0 11.4A4.4 4.4 0 1 1 12 7.6a4.4 4.4 0 0 1 0 8.8Z"/></svg></div>
+      <div class="flab">ยืนยันรหัสผ่านใหม่</div>
+      <div class="finp"><input id="fgPw2" type="password">
+        <svg class="ic" onclick="pw('fgPw2')" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.2 4.2-10.6 6.6a.9.9 0 0 0 0 .8C2.8 14.8 6.8 19 12 19s9.2-4.2 10.6-6.6a.9.9 0 0 0 0-.8C21.2 9.2 17.2 5 12 5Zm0 11.4A4.4 4.4 0 1 1 12 7.6a4.4 4.4 0 0 1 0 8.8Z"/></svg></div>
+      <button class="ybtn" style="margin-top:22px" onclick="forgotReset()">บันทึกรหัสผ่านใหม่</button>
+    </div>
+    <div class="linkrow" style="justify-content:center;margin-top:16px"><span onclick="go('login')">← กลับหน้าเข้าสู่ระบบ</span></div>
+  </div></div>
+</div>
+
+<!-- ==================== HOME ==================== -->
+<div class="view active greenpage" id="home">
+  <div class="sbar on-green"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="scroll"><div class="body">
+    <div class="searchcard">
+      <div class="ybox">
+        <div class="yrow">
+          <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+          <div class="fl"><div class="lb">จุดขึ้น</div><select id="fromCity" onchange="syncCity()"></select></div>
+        </div>
+        <div class="yrow">
+          <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+          <div class="fl"><div class="lb">จุดลง</div><select id="toCity" onchange="syncCity()"></select></div>
+        </div>
+        <div class="ysplit">
+          <div class="yrow">
+            <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm12 8v10H5V10z"/></svg>
+            <div class="fl"><div class="lb">วันที่</div><select id="dateSel"></select></div>
+          </div>
+          <div class="yrow">
+            <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/></svg>
+            <div class="fl"><div class="lb">จำนวน</div><select id="paxSel"></select></div>
+          </div>
+        </div>
+      </div>
+      <button class="ybtn" onclick="search()">ค้นหาเที่ยวรถ</button>
+    </div>
+
+    <div class="slab">เมนูลัด</div>
+    <div class="quick">
+      <div class="qi" onclick="search()"><div class="c"><svg viewBox="0 0 24 24"><path d="M4 6h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8a2 2 0 0 1 2-2Z"/></svg></div><span>จองตั๋ว</span></div>
+      <div class="qi" onclick="go('parcel')"><div class="c"><svg viewBox="0 0 24 24"><path d="M21 8H3l1.5-4h15zM3 10h18v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zm6 3v2h6v-2z"/></svg></div><span>ส่งพัสดุ</span></div>
+      <div class="qi" onclick="go('bookings');renderHistory()"><div class="c"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 3h-2v6h5v-2h-3z"/></svg></div><span>เช็คสถานะ</span></div>
+      <div class="qi" onclick="go('contact')"><div class="c"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1z"/></svg></div><span>ติดต่อ</span></div>
+    </div>
+
+    <div class="slab">เส้นทางยอดฮิต</div>
+    <div class="hots" id="hotList"></div>
+  </div></div>
+  <div class="nav" id="nav-home"></div>
+</div>
+
+<!-- ==================== RESULTS ==================== -->
+<div class="view greenpage" id="results">
+  <div class="sbar on-green"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>จองตั๋วรถตู้</h2></div></div>
+  <div class="scroll"><div class="body" style="padding-top:0">
+    <div class="vanmark"><div class="c"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div><b>VanGo</b></div>
+    <div class="wlab">จาก</div>
+    <div class="fromto">
+      <div class="s"><div class="k">จาก:</div><div class="v" id="rFrom">ปัตตานี</div></div>
+      <div class="sw" onclick="swapCity()"><svg viewBox="0 0 24 24"><path d="M7 7h9l-3-3 1.4-1.4L20.8 8 15.4 13.4 14 12l3-3H7zm10 10H8l3 3-1.4 1.4L4.2 16l5.4-5.4L11 12l-3 3h9z"/></svg></div>
+      <div class="s r"><div class="k">ถึง:</div><div class="v" id="rTo">ยะลา</div></div>
+    </div>
+    <div class="wlab">เวลาออก
+      <svg onclick="toggleMap()" viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg>
+    </div>
+    <div id="routeMap"></div>
+    <div class="mapinfo" id="mapInfo"><span id="miRoute"></span><b id="miDist">—</b></div>
+    <div id="tripList"></div>
+  </div></div>
+  <div class="nav" id="nav-results"></div>
+</div>
+
+<!-- ==================== SEATS ==================== -->
+<div class="view" id="seats">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('results')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>เลือกรอบและที่นั่ง</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="slots" id="slotList"></div>
+    <div class="seatwrap">
+      <div class="seatgrid" id="seatGrid"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#fff"></i>ว่าง</span>
+      <span><i style="background:var(--yellow)"></i>กำลังเลือก</span>
+      <span><i style="background:#111;border-color:#111"></i>จองแล้ว</span>
+    </div>
+    <div class="sumline" id="seatSum"></div>
+  </div></div>
+  <div class="footbar">
+    <div class="l"><span id="seatCnt">0 ที่นั่ง</span><b id="seatTotal">฿0</b></div>
+    <button class="gbtn" onclick="goPayment()">ถัดไป</button>
+  </div>
+  <div class="nav" id="nav-seats"></div>
+</div>
+
+<!-- ==================== PAYMENT ==================== -->
+<div class="view" id="payment">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('seats')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ช่องทางการชำระเงิน</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="pmgrid">
+      <div class="pm" data-m="bank" onclick="setPM('bank')"><div class="ic"><svg viewBox="0 0 24 24" fill="#167113"><path d="M12 2 2 7v2h20V7zM4 11v7H2v2h20v-2h-2v-7h-2v7h-3v-7h-2v7H8v-7z"/></svg></div><span>โอนเงินธนาคาร</span></div>
+      <div class="pm" data-m="card" onclick="setPM('card')"><div class="ic"><svg viewBox="0 0 24 24" fill="#167113"><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1H2zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm3 5v2h5v-2z"/></svg></div><span>บัตรเครดิต/เดบิต</span></div>
+      <div class="pm" data-m="cash" onclick="setPM('cash')"><div class="ic"><svg viewBox="0 0 24 24" fill="#2e9e4f"><path d="M2 6h20v12H2zm10 2.5A3.5 3.5 0 1 0 12 15.5a3.5 3.5 0 0 0 0-7ZM5 8.5a1.5 1.5 0 0 1-1.5 1.5V8.5zm14 0h1.5V10A1.5 1.5 0 0 1 19 8.5ZM3.5 14A1.5 1.5 0 0 1 5 15.5H3.5zm17 0v1.5H19a1.5 1.5 0 0 1 1.5-1.5Z"/></svg></div><span>เงินสด</span></div>
+      <div class="pm on" data-m="pp" onclick="setPM('pp')"><div class="ic"><span class="pplogo" style="margin:0">Prompt<b style="color:#0b7ec4">Pay</b></span></div><span>พร้อมเพย์</span></div>
+    </div>
+    <div class="ppcard" id="ppCard">
+      <span class="pplogo">Prompt<b style="color:#0b7ec4">Pay</b></span>
+      <div class="qrbox" id="ppqr"></div>
+      <div class="ppname">พร้อมเพย์ · <span id="payName">รถตู้สามจังหวัด</span></div>
+      <div class="ppnote">สแกนคิวอาร์โค้ดเพื่อชำระเงิน</div>
+      <div style="font-size:22px;font-weight:700;color:var(--primary);margin-top:8px" id="payAmt">฿0</div>
+    </div>
+    <div class="ppcard" id="otherCard" style="display:none">
+      <div style="font-size:14px;font-weight:700;color:var(--ink)" id="otherTitle"></div>
+      <div style="font-size:13px;color:#555;line-height:1.9;margin-top:10px" id="otherText"></div>
+      <div style="font-size:22px;font-weight:700;color:var(--primary);margin-top:10px" id="payAmt2">฿0</div>
+    </div>
+    <button class="gbtn full" style="margin-top:16px" onclick="completePayment()">ยืนยันชำระเงิน</button>
+  </div></div>
+  <div class="nav" id="nav-payment"></div>
+</div>
+
+<!-- ==================== TICKET ==================== -->
+<div class="view" id="ticket">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ตั๋วของฉัน</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="tick">
+      <div class="tickbadge">ตั๋วของฉัน</div>
+      <div class="tick-top">
+        <div class="tickbrand"><div class="c"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div><b>VanGo</b></div>
+        <div class="tdet">
+          <div class="h">รายละเอียดตั๋ว</div>
+          <div>เส้นทาง: <span id="tkRoute"></span></div>
+          <div>วันที่: <span id="tkDate"></span>  ที่นั่ง: <span id="tkSeats"></span></div>
+          <div>เวลา: <span id="tkTime"></span></div>
+          <div>ชื่อผู้โดยสาร: <span id="tkName"></span></div>
+          <div>รหัสจอง: <span id="tkCode"></span></div>
+        </div>
+      </div>
+      <div class="tick-sep"><i></i><i></i></div>
+      <div class="tick-bot">
+        <div class="tickqr" id="tkQR"></div>
+        <div class="tstat"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 15-4-4 1.4-1.4L11 14.2l5.6-5.6L18 10z"/></svg>สถานะ : ชำระเงินเรียบร้อยแล้ว</div>
+      </div>
+    </div>
+    <button class="gbtn full" style="margin-top:16px" onclick="downloadTicket()">ดาวน์โหลดตั๋ว</button>
+    <button class="wbtn" style="margin-top:11px" onclick="shareTicket()">แชร์ตั๋ว</button>
+  </div></div>
+  <div class="nav" id="nav-ticket"></div>
+</div>
+
+<!-- ==================== HISTORY ==================== -->
+<div class="view" id="bookings">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ประวัติการเดินทาง</h2></div></div>
+  <div class="scroll"><div class="body" id="histList"></div></div>
+  <div class="nav" id="nav-bookings"></div>
+</div>
+
+<!-- ==================== NOTIFY ==================== -->
+<div class="view" id="notify">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>แจ้งเตือน</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="nmap">
+      <svg viewBox="0 0 340 150" xmlns="http://www.w3.org/2000/svg">
+        <rect width="340" height="150" fill="#eef1f2"/>
+        <path d="M0 108 Q70 96 130 112 T250 120 T340 104" stroke="#cfd8dc" stroke-width="16" fill="none"/>
+        <path d="M0 40 Q90 30 160 52 T340 46" stroke="#e6e9ea" stroke-width="10" fill="none"/>
+        <path d="M40 150 L70 40" stroke="#dfe4e6" stroke-width="7" fill="none"/>
+        <path d="M255 150 Q262 90 300 44" stroke="#dfe4e6" stroke-width="7" fill="none"/>
+        <path d="M28 130 Q120 118 190 96 T318 62" stroke="#e23b2e" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <circle cx="18" cy="72" r="11" fill="#3d6fd6"/><text x="18" y="76" font-size="9" fill="#fff" text-anchor="middle" font-family="sans-serif">45</text>
+        <g transform="translate(150,26)"><path d="M20 2 38 34 2 34z" fill="#f5c23a" stroke="#c99b12" stroke-width="2"/><text x="20" y="30" font-size="15" text-anchor="middle">🚗</text></g>
+        <rect x="196" y="34" width="88" height="20" rx="4" fill="#e23b2e"/><text x="240" y="48" font-size="11" fill="#fff" text-anchor="middle" font-family="sans-serif">จราจรหนาแน่น</text>
+        <circle cx="296" cy="76" r="15" fill="#fff" stroke="#4caf50" stroke-width="2"/><text x="296" y="81" font-size="13" text-anchor="middle">🚐</text>
+        <circle cx="300" cy="100" r="5" fill="#e23b2e"/>
+        <text x="306" y="118" font-size="11" fill="#455a64" font-family="sans-serif">ปัตตานี</text>
+        <text x="20" y="140" font-size="11" fill="#455a64" font-family="sans-serif">ยะลา</text>
+      </svg>
+    </div>
+    <div class="nhead">รายละเอียด</div>
+    <div class="nbody">
+      สถานที่: ทางหลวงหมายเลข 4 บริเวณ กม.21-25<br>
+      เวลาแจ้ง: 10:36 น.<br>
+      สถานะ: การจราจรเคลื่อนตัวช้าอย่างมาก
+    </div>
+    <div class="ntext">
+      ขออภัยในความไม่สะดวก<br>
+      ตรวจสอบสภาพจราจรเพิ่มเติมได้ผ่านแอปแผนที่<br>
+      ขอให้เดินทางโดยสวัสดิภาพ
+    </div>
+    <button class="gbtn full" onclick="go('home');toast('รับทราบแล้ว')">รับทราบ</button>
+  </div></div>
+  <div class="nav" id="nav-notify"></div>
+</div>
+
+<!-- ==================== PROFILE ==================== -->
+<div class="view" id="profile">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>บัญชีของฉัน</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="pcard"><div class="uinfo">
+      <div class="av" id="profAv"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/></svg></div>
+      <div><b id="profName">ผู้เยี่ยมชม</b><span id="profEmail">ยังไม่ได้เข้าสู่ระบบ</span></div>
+    </div></div>
+    <div class="menu">
+      <div class="mi" onclick="go('bookings');renderHistory()"><svg viewBox="0 0 24 24"><path d="M7 2h10a2 2 0 0 1 2 2v18l-7-4-7 4V4a2 2 0 0 1 2-2Z"/></svg>ประวัติการเดินทาง<span class="ar">›</span></div>
+      <div class="mi" onclick="go('security')"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z"/></svg>ความปลอดภัย<span class="ar">›</span></div>
+      <div class="mi" onclick="go('contact')"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2zm0-8h-2V7h2z"/></svg>ช่วยเหลือ / ติดต่อ<span class="ar">›</span></div>
+      <div class="mi" id="authMi" onclick="go('login')"><svg viewBox="0 0 24 24"><path d="M11 7v2h5v2h-5v2l-4-3zM20 4h-8v2h6v12h-6v2h8z"/></svg>เข้าสู่ระบบ / สมัครสมาชิก<span class="ar">›</span></div>
+    </div>
+  </div></div>
+  <div class="nav" id="nav-profile"></div>
+</div>
+
+<!-- ==================== LOGOUT ==================== -->
+<div class="view" id="logoutv">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('profile')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ออกจากระบบ</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="avcard">
+      <div class="av"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/></svg></div>
+      <p>คุณต้องการออกจากระบบหรือไม่?</p>
+      <button class="rbtn" onclick="logout()">ออกจากระบบ</button>
+    </div>
+    <button class="wbtn" style="margin-top:13px" onclick="go('profile')">ยกเลิก</button>
+  </div></div>
+  <div class="nav" id="nav-logoutv"></div>
+</div>
+
+<!-- ==================== SECURITY ==================== -->
+<div class="view" id="security">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('profile')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ความปลอดภัย</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="pcard">
+      <h4>เปลี่ยนรหัสผ่าน</h4>
+      <div class="lab">รหัสผ่านเดิม</div><input id="scOld" type="password">
+      <div class="lab">รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)</div><input id="scNew" type="password">
+      <div class="lab">ยืนยันรหัสผ่านใหม่</div><input id="scNew2" type="password">
+      <button class="gbtn full" style="margin-top:15px" onclick="changePass()">บันทึกรหัสผ่านใหม่</button>
+    </div>
+    <div class="pcard">
+      <h4>ข้อมูลของคุณปลอดภัย</h4>
+      <div style="font-size:12.5px;color:#444;line-height:1.85">
+        • แอปไม่เก็บรหัสผ่านเป็นข้อความล้วน (เข้ารหัสก่อนบันทึก)<br>
+        • ข้อมูลการจองใช้เพื่อการเดินทางเท่านั้น<br>
+        • บัญชีโซเชียลไม่ต้องใช้รหัสผ่านของแอป<br>
+        • อ่านฉบับเต็ม: <a href="privacy.html" style="color:var(--primary);font-weight:700">นโยบายความเป็นส่วนตัว</a>
+      </div>
+    </div>
+  </div></div>
+  <div class="nav" id="nav-security"></div>
+</div>
+
+<!-- ==================== PARCEL ==================== -->
+<div class="view" id="parcel">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ส่งพัสดุ</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="pcard">
+      <h4>ส่งพัสดุไปกับรถตู้</h4>
+      <div class="lab">ต้นทาง</div><input id="pcFrom" type="text" placeholder="เช่น ยะลา">
+      <div class="lab">ปลายทาง</div><input id="pcTo" type="text" placeholder="เช่น ปัตตานี">
+      <div class="lab">ชื่อผู้รับ</div><input id="pcName" type="text">
+      <div class="lab">เบอร์ผู้รับ</div><input id="pcTel" type="tel">
+      <button class="gbtn full" style="margin-top:15px" onclick="sendParcel()">แจ้งส่งพัสดุ</button>
+    </div>
+    <div class="pcard"><h4>อัตราค่าส่ง</h4>
+      <div style="font-size:12.5px;color:#444;line-height:1.9">
+        • พัสดุเล็ก (ไม่เกิน 5 กก.) — 50 บาท<br>
+        • พัสดุกลาง (5–15 กก.) — 100 บาท<br>
+        • พัสดุใหญ่ (15 กก. ขึ้นไป) — สอบถามคิวรถ<br>
+        • ส่งถึงปลายทางภายในวันเดียวกัน
+      </div>
+    </div>
+  </div></div>
+  <div class="nav" id="nav-parcel"></div>
+</div>
+
+<!-- ==================== CONTACT ==================== -->
+<div class="view" id="contact">
+  <div class="sbar on-green" style="background:var(--primary)"><span>9:41</span><span>5G ▪ 80%</span></div>
+  <div class="ghead"><div class="row"><div class="back" onclick="go('home')"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></div><h2>ติดต่อ / ช่วยเหลือ</h2></div></div>
+  <div class="scroll"><div class="body">
+    <div class="pcard">
+      <h4>ติดต่อคิวรถตู้</h4>
+      <div style="font-size:13px;color:#444;line-height:1.9">เวลาให้บริการ 06:00 – 18:00 น. ทุกวัน</div>
+      <a class="gbtn full" href="tel:0933754604" style="display:block;text-align:center;text-decoration:none;margin-top:12px">โทร 093-375-4604</a>
+    </div>
+    <div class="pcard">
+      <h4>คำถามที่พบบ่อย</h4>
+      <div style="font-size:12.5px;color:#444;line-height:1.95">
+        <b>จองรถตู้อย่างไร?</b><br>เลือกจุดขึ้น-จุดลงที่หน้าแรก เลือกวันและจำนวนคน กด "ค้นหาเที่ยวรถ" เลือกรอบและที่นั่ง แล้วชำระเงิน<br><br>
+        <b>ยกเลิกได้ไหม?</b><br>ติดต่อคิวรถล่วงหน้าอย่างน้อย 2 ชั่วโมงก่อนเวลาออกรถ พร้อมแจ้งรหัสการจอง<br><br>
+        <b>ขึ้นรถที่ไหน?</b><br>ที่สถานีขนส่ง/คิวรถตู้ของเมืองต้นทาง ควรถึงก่อนเวลา 15 นาที
+      </div>
+    </div>
+  </div></div>
+  <div class="nav" id="nav-contact"></div>
+</div>
+
+</div></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ================= CONFIG ================= */
+const CONFIG={
+  GOOGLE_CLIENT_ID:'1029840503251-hsuuf0r6drkqto02eo4ni98kgopfnm3t.apps.googleusercontent.com',
+  FACEBOOK_APP_ID:'1069105562346142',
+  X_CLIENT_ID:'',
+  X_TOKEN_ENDPOINT:'',
+  PROMPTPAY_ID:'0933754604',
+  PROMPTPAY_NAME:'รถตู้สามจังหวัด',
+  SHEET_ENDPOINT:''
+};
+
+/* ================= DATA ================= */
+const CITIES=['ยะลา','ปัตตานี','นราธิวาส','เบตง','สุไหงโก-ลก','หาดใหญ่','สงขลา'];
+const STATION={'ยะลา':'สถานีขนส่ง ยะลา','ปัตตานี':'สถานีขนส่ง ปัตตานี','นราธิวาส':'สถานีขนส่ง นราธิวาส','เบตง':'คิวรถตู้ เบตง','สุไหงโก-ลก':'สถานีขนส่ง สุไหงโก-ลก','หาดใหญ่':'สถานีขนส่ง หาดใหญ่','สงขลา':'สถานีขนส่ง สงขลา'};
+const COORD={'ยะลา':[6.5410,101.2800],'ปัตตานี':[6.8690,101.2500],'นราธิวาส':[6.4260,101.8230],'เบตง':[5.7750,101.0700],'สุไหงโก-ลก':[6.0270,101.9660],'หาดใหญ่':[7.0086,100.4747],'สงขลา':[7.1898,100.5951]};
+const ROUTES={
+ 'ยะลา|ปัตตานี':{min:60,price:170},'ยะลา|นราธิวาส':{min:150,price:170},'ยะลา|เบตง':{min:170,price:180},
+ 'ยะลา|สุไหงโก-ลก':{min:185,price:200},'ยะลา|หาดใหญ่':{min:120,price:150},'ยะลา|สงขลา':{min:150,price:180},
+ 'ปัตตานี|นราธิวาส':{min:120,price:170},'ปัตตานี|เบตง':{min:210,price:220},'ปัตตานี|สุไหงโก-ลก':{min:185,price:200},
+ 'ปัตตานี|หาดใหญ่':{min:105,price:140},'ปัตตานี|สงขลา':{min:120,price:170},
+ 'นราธิวาส|สุไหงโก-ลก':{min:75,price:80},'นราธิวาส|เบตง':{min:270,price:300},'นราธิวาส|หาดใหญ่':{min:200,price:220},
+ 'นราธิวาส|สงขลา':{min:220,price:240},'เบตง|สุไหงโก-ลก':{min:300,price:320},'เบตง|หาดใหญ่':{min:260,price:280},
+ 'เบตง|สงขลา':{min:280,price:300},'สุไหงโก-ลก|หาดใหญ่':{min:240,price:260},'สุไหงโก-ลก|สงขลา':{min:255,price:260},
+ 'หาดใหญ่|สงขลา':{min:40,price:60}
+};
+const DEP=['08:00','09:00','10:00','12:00','13:00','14:00'];
+const DRIVERS=['สมใจ ใจบุญ','ตรี ใจบุญ','วง สาย','อาลี หมัดหลี','มะรอโซ สาและ','ยูโซ๊ะ บินอาแซ'];
+const HOT=[['ปัตตานี','สงขลา'],['หาดใหญ่','สุไหงโก-ลก']];
+
+const state={from:'ปัตตานี',to:'ยะลา',date:'',pax:1,trip:null,seats:[],slot:null,pm:'pp'};
+let currentUser=null;
+const bookings=(()=>{try{return JSON.parse(localStorage.getItem('vgBookings')||'[]')}catch(e){return[]}})();
+function saveBk(){try{localStorage.setItem('vgBookings',JSON.stringify(bookings))}catch(e){}}
+
+/* ================= UTIL ================= */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000);}
+function pw(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+function go(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.scroll').forEach(s=>s.scrollTop=0);syncNav(id);}
+function routeInfo(a,b){return ROUTES[a+'|'+b]||ROUTES[b+'|'+a]||{min:120,price:150};}
+function durText(m){const h=Math.floor(m/60),r=m%60;return (h?h+'ชม':'')+(r?(h?' ':'')+r+'น':'')||'0น';}
+function addMin(t,m){const[a,b]=t.split(':').map(Number);const d=new Date(2000,0,1,a,b+m);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+const THM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thDate(d){return d.getDate()+' '+THM[d.getMonth()]+' '+(d.getFullYear()+543);}
+
+/* ================= ACCOUNTS ================= */
+function _hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return 'h'+h.toString(16)+'_'+s.length;}
+function _nid(v){v=(v||'').trim();return /^[0-9\s-]+$/.test(v)?v.replace(/[\s-]/g,''):v.toLowerCase();}
+function _valid(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)||/^0[0-9]{8,9}$/.test(v);}
+function _users(){try{return JSON.parse(localStorage.getItem('vgUsers')||'[]')}catch(e){return[]}}
+function _saveU(u){try{localStorage.setItem('vgUsers',JSON.stringify(u))}catch(e){}}
+
+function doLogin(){
+  const id=_nid(document.getElementById('loginId').value),p=document.getElementById('loginPw').value||'';
+  if(!id)return toast('กรุณากรอกอีเมลหรือเบอร์โทร');
+  if(!p)return toast('กรุณากรอกรหัสผ่าน');
+  const u=_users().find(x=>x.id===id);
+  if(!u)return toast('ไม่พบบัญชีนี้ — กดสมัครสมาชิกก่อน');
+  if(u.pass!==_hash(p))return toast('รหัสผ่านไม่ถูกต้อง');
+  loginAs({name:u.name,email:u.id,provider:'อีเมล'});
+}
+function doRegister(){
+  const n=(document.getElementById('regName').value||'').trim(),id=_nid(document.getElementById('regId').value);
+  const p1=document.getElementById('regPw').value||'',p2=document.getElementById('regPw2').value||'';
+  if(n.length<2)return toast('กรุณากรอกชื่อ-นามสกุล');
+  if(!id)return toast('กรุณากรอกอีเมลหรือเบอร์โทร');
+  if(!_valid(id))return toast('รูปแบบอีเมล/เบอร์โทรไม่ถูกต้อง');
+  if(p1.length<6)return toast('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+  if(p1!==p2)return toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+  if(!document.getElementById('regTerms').checked)return toast('กรุณายอมรับเงื่อนไขการใช้งาน');
+  const us=_users();
+  if(us.some(u=>u.id===id))return toast('บัญชีนี้มีอยู่แล้ว — เข้าสู่ระบบได้เลย');
+  us.push({id,name:n,pass:_hash(p1)});_saveU(us);
+  loginAs({name:n,email:id,provider:'อีเมล'});toast('สมัครสมาชิกสำเร็จ ยินดีต้อนรับ 🎉');
+}
+let _fg={id:null,otp:null};
+function _fstep(n){['fstep1','fstep2','fstep3'].forEach((s,i)=>document.getElementById(s).style.display=i===n-1?'':'none');[1,2,3].forEach(i=>document.getElementById('fs'+i).classList.toggle('on',i<=n));}
+function openForgot(){_fg={id:null,otp:null};['fgId','fgOtp','fgPw','fgPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});_fstep(1);go('forgot');}
+function forgotStart(){
+  const id=_nid(document.getElementById('fgId').value);
+  if(!id)return toast('กรุณากรอกอีเมลหรือเบอร์โทร');
+  if(!_users().find(x=>x.id===id))return toast('ไม่พบบัญชีนี้ในระบบ');
+  _fg.id=id;_fg.otp=String(Math.floor(100000+Math.random()*900000));
+  document.getElementById('fgShow').textContent=_fg.otp;_fstep(2);toast('ส่งรหัส OTP แล้ว');
+}
+function forgotVerify(){
+  const v=(document.getElementById('fgOtp').value||'').trim();
+  if(v.length!==6)return toast('กรุณากรอกรหัส 6 หลัก');
+  if(v!==_fg.otp)return toast('รหัส OTP ไม่ถูกต้อง');
+  _fstep(3);
+}
+function forgotReset(){
+  const a=document.getElementById('fgPw').value||'',b=document.getElementById('fgPw2').value||'';
+  if(a.length<6)return toast('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+  if(a!==b)return toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+  const us=_users(),u=us.find(x=>x.id===_fg.id);
+  if(!u){_fstep(1);return toast('เกิดข้อผิดพลาด ลองใหม่');}
+  u.pass=_hash(a);_saveU(us);go('login');toast('ตั้งรหัสผ่านใหม่สำเร็จ ✅');
+}
+function changePass(){
+  if(!currentUser)return toast('กรุณาเข้าสู่ระบบก่อน');
+  if(currentUser.provider!=='อีเมล')return toast('บัญชี '+currentUser.provider+' ไม่ต้องใช้รหัสผ่านของแอป');
+  const us=_users(),u=us.find(x=>x.id===_nid(currentUser.email));
+  if(!u)return toast('บัญชีนี้ไม่ได้สมัครผ่านแอป');
+  const o=document.getElementById('scOld').value||'',n1=document.getElementById('scNew').value||'',n2=document.getElementById('scNew2').value||'';
+  if(u.pass!==_hash(o))return toast('รหัสผ่านเดิมไม่ถูกต้อง');
+  if(n1.length<6)return toast('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+  if(n1!==n2)return toast('รหัสผ่านใหม่ไม่ตรงกัน');
+  u.pass=_hash(n1);_saveU(us);['scOld','scNew','scNew2'].forEach(i=>document.getElementById(i).value='');
+  toast('เปลี่ยนรหัสผ่านสำเร็จ ✅');
+}
+function loginAs(p){
+  currentUser=p;try{localStorage.setItem('vgSession',JSON.stringify(p))}catch(e){}
+  paintUser();updateAuthMenu();toast('เข้าสู่ระบบด้วย '+(p.provider||'')+' สำเร็จ');go('home');
+}
+function paintUser(){
+  const n=currentUser?currentUser.name:'ผู้เยี่ยมชม';
+  const e=currentUser?(currentUser.email||('เข้าสู่ระบบด้วย '+currentUser.provider)):'ยังไม่ได้เข้าสู่ระบบ';
+  document.getElementById('profName').textContent=n;
+  document.getElementById('profEmail').textContent=e;
+  const av=document.getElementById('profAv');
+  if(currentUser&&currentUser.picture)av.innerHTML='<img src="'+currentUser.picture+'" alt="">';
+  else av.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/></svg>';
+}
+function updateAuthMenu(){
+  const mi=document.getElementById('authMi');if(!mi)return;
+  if(currentUser){mi.setAttribute('onclick',"go('logoutv')");mi.style.color='var(--danger)';
+    mi.innerHTML='<svg viewBox="0 0 24 24" style="fill:var(--danger)"><path d="M16 17v-2h-5v-2h5V9l4 4zM4 4h8v2H6v12h6v2H4z"/></svg>ออกจากระบบ<span class="ar">›</span>';}
+  else{mi.setAttribute('onclick',"go('login')");mi.style.color='';
+    mi.innerHTML='<svg viewBox="0 0 24 24"><path d="M11 7v2h5v2h-5v2l-4-3zM20 4h-8v2h6v12h-6v2h8z"/></svg>เข้าสู่ระบบ / สมัครสมาชิก<span class="ar">›</span>';}
+}
+function logout(){currentUser=null;try{localStorage.removeItem('vgSession')}catch(e){}paintUser();updateAuthMenu();go('home');toast('ออกจากระบบแล้ว');}
+function guestIn(){go('home');toast('เข้าชมแบบผู้เยี่ยมชม — จองได้เลย 🚐');}
+
+/* ================= SOCIAL ================= */
+function googleLogin(){
+  if(!CONFIG.GOOGLE_CLIENT_ID)return toast('ยังไม่ได้ตั้งค่า Google Client ID');
+  if(!(window.google&&google.accounts&&google.accounts.oauth2))return toast('กำลังโหลด Google… ลองอีกครั้ง');
+  google.accounts.oauth2.initTokenClient({client_id:CONFIG.GOOGLE_CLIENT_ID,scope:'openid email profile',
+    callback:async r=>{ if(!r||!r.access_token)return toast('ยกเลิกการเข้าสู่ระบบ');
+      try{const u=await(await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+r.access_token}})).json();
+        loginAs({name:u.name||'ผู้ใช้ Google',email:u.email,picture:u.picture,provider:'Google'});
+      }catch(e){toast('ดึงข้อมูล Google ไม่สำเร็จ');}}}).requestAccessToken();
+}
+function loadFB(){if(window.FB||!CONFIG.FACEBOOK_APP_ID)return;const s=document.createElement('script');s.src='https://connect.facebook.net/th_TH/sdk.js';s.onload=()=>FB.init({appId:CONFIG.FACEBOOK_APP_ID,version:'v20.0',xfbml:false});document.head.appendChild(s);}
+function facebookLogin(){
+  if(!CONFIG.FACEBOOK_APP_ID)return toast('ยังไม่ได้ตั้งค่า Facebook App ID');
+  if(!window.FB){loadFB();return toast('กำลังโหลด Facebook… ลองอีกครั้ง');}
+  FB.login(r=>{ if(r.authResponse){FB.api('/me',{fields:'name,picture.width(120)'},u=>loginAs({name:u.name||'ผู้ใช้ Facebook',picture:u.picture&&u.picture.data&&u.picture.data.url,provider:'Facebook'}));}
+    else toast('ยกเลิกการเข้าสู่ระบบ');},{scope:'public_profile'});
+}
+function xLogin(){ if(!CONFIG.X_CLIENT_ID)return toast('ยังไม่ได้ตั้งค่า X Client ID'); loginAs({name:'ผู้ใช้ X',provider:'X'}); }
+
+/* ================= HOME ================= */
+function initHome(){
+  const f=document.getElementById('fromCity'),t=document.getElementById('toCity');
+  f.innerHTML=CITIES.map(c=>`<option${c===state.from?' selected':''}>${c}</option>`).join('');
+  t.innerHTML=CITIES.map(c=>`<option${c===state.to?' selected':''}>${c}</option>`).join('');
+  const d=document.getElementById('dateSel');let h='';
+  for(let i=0;i<14;i++){const dd=new Date();dd.setDate(dd.getDate()+i);
+    const shortD=dd.getDate()+' '+THM[dd.getMonth()]+' '+String(dd.getFullYear()+543).slice(-2);
+    h+=`<option value="${thDate(dd)}">${i===0?'วันนี้':(i===1?'พรุ่งนี้':shortD)}</option>`;}
+  d.innerHTML=h;state.date=d.value;
+  d.onchange=()=>state.date=d.value;
+  const p=document.getElementById('paxSel');
+  p.innerHTML=[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}"${n===state.pax?' selected':''}>${n} คน</option>`).join('');
+  p.onchange=()=>state.pax=+p.value;
+  document.getElementById('hotList').innerHTML=HOT.map(([a,b])=>{
+    const r=routeInfo(a,b);
+    return `<div class="hot" onclick="state.from='${a}';state.to='${b}';syncSel();search()">
+      <div class="v"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div>
+      <div class="r">${a}  -  ${b}</div><div class="p">${r.price} บาท</div></div>`;
+  }).join('');
+}
+function syncCity(){state.from=document.getElementById('fromCity').value;state.to=document.getElementById('toCity').value;}
+function syncSel(){document.getElementById('fromCity').value=state.from;document.getElementById('toCity').value=state.to;}
+function swapCity(){const a=state.from;state.from=state.to;state.to=a;syncSel();search();}
+
+/* ================= SEARCH / TRIPS ================= */
+let TRIPS=[];
+function buildTrips(a,b){
+  const r=routeInfo(a,b);
+  return DEP.map((t,i)=>({dep:t,arr:addMin(t,r.min),min:r.min,price:r.price+(i%3===2?10:0),
+    free:3+((i*5)%9),drv:DRIVERS[i%DRIVERS.length]}));
+}
+function search(){
+  syncCity();
+  if(state.from===state.to)return toast('จุดขึ้นและจุดลงต้องต่างกัน');
+  TRIPS=buildTrips(state.from,state.to);
+  document.getElementById('rFrom').textContent=state.from;
+  document.getElementById('rTo').textContent=state.to;
+  document.getElementById('miRoute').textContent='🚐 '+state.from+' → '+state.to;
+  document.getElementById('tripList').innerHTML=TRIPS.map((t,i)=>`
+    <div class="trip">
+      <div class="t1">
+        <div class="tm"><b>${t.dep}</b><span>${STATION[state.from]||state.from}</span></div>
+        <div class="tm"><b>${t.arr}</b><span>${STATION[state.to]||state.to}</span></div>
+        <div class="pr"><b>${t.price}฿</b><span>/ที่นั่ง</span></div>
+      </div>
+      <div class="troute"><i class="dot"></i><span class="ln"></span><em><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></em><span class="ln"></span><i class="pin"></i></div>
+      <div class="t2">
+        <span class="bdg g">ใช้เวลา ${durText(t.min)}</span>
+        <span class="bdg s">ว่าง ${t.free} ที่</span>
+        <span class="bdg i">แอร์ WIFI</span>
+        <button class="pick" onclick="openSeats(${i})">เลือก</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('routeMap').classList.remove('show');
+  document.getElementById('mapInfo').classList.remove('show');
+  go('results');
+}
+
+/* ================= MAP ================= */
+let _map=null,_layer=null,_mapDone=false;
+function toggleMap(){
+  const m=document.getElementById('routeMap'),i=document.getElementById('mapInfo');
+  const on=m.classList.toggle('show');i.classList.toggle('show',on);
+  if(on){ setTimeout(()=>drawMap(state.from,state.to),60); }
+}
+function hav(a,b){const R=6371,dLa=(b[0]-a[0])*Math.PI/180,dLo=(b[1]-a[1])*Math.PI/180;
+  const x=Math.sin(dLa/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));}
+async function drawMap(a,b){
+  const A=COORD[a],B=COORD[b],el=document.getElementById('miDist');
+  if(!A||!B)return;
+  if(!window.L){el.textContent='~'+Math.round(hav(A,B))+' กม.';return;}
+  try{
+    if(!_map){_map=L.map('routeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false}).setView(A,8);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(_map);}
+    else _map.invalidateSize();
+    if(_layer)_map.removeLayer(_layer);
+    _layer=L.layerGroup().addTo(_map);
+    L.circleMarker(A,{radius:7,color:'#167113',fillColor:'#fff',fillOpacity:1,weight:4}).addTo(_layer).bindTooltip(a,{permanent:true,direction:'top'});
+    L.circleMarker(B,{radius:7,color:'#EE2011',fillColor:'#EE2011',fillOpacity:1,weight:3}).addTo(_layer).bindTooltip(b,{permanent:true,direction:'top'});
+    el.textContent='~'+Math.round(hav(A,B))+' กม.';
+    _map.fitBounds(L.latLngBounds([A,B]).pad(0.35));
+    const u=`https://router.project-osrm.org/route/v1/driving/${A[1]},${A[0]};${B[1]},${B[0]}?overview=full&geometries=geojson`;
+    const j=await (await fetch(u)).json();
+    if(j&&j.routes&&j.routes[0]){
+      const rt=j.routes[0],pts=rt.geometry.coordinates.map(c=>[c[1],c[0]]);
+      L.polyline(pts,{color:'#167113',weight:5,opacity:.95}).addTo(_layer);
+      _map.fitBounds(L.latLngBounds(pts).pad(0.15));
+      el.textContent=(rt.distance/1000).toFixed(0)+' กม. · ~'+Math.round(rt.duration/60)+' นาที';
+    }else{L.polyline([A,B],{color:'#167113',weight:4,dashArray:'6 6'}).addTo(_layer);}
+  }catch(e){ el.textContent='~'+Math.round(hav(A,B))+' กม.'; }
+}
+
+/* ================= SEATS ================= */
+const SEATMAP=[['S01','GAP','DRV'],['S04','S03','S02'],['S05','S06','S07'],['S08','S09','S10'],['S11','S12','S13']];
+let TAKEN=[];
+function openSeats(i){
+  state.trip=TRIPS[i];state.slot=state.trip.dep;state.seats=[];
+  const seed=(state.from+state.to+state.trip.dep).length;
+  TAKEN=['S01','S02','S07'].slice(0,1+(seed%3));
+  document.getElementById('slotList').innerHTML=DEP.slice(0,4).map(t=>
+    `<div class="slot${t===state.slot?' on':''}" onclick="pickSlot('${t}')">${t.replace(':00',':00')} น</div>`).join('');
+  renderSeats();go('seats');
+}
+function pickSlot(t){
+  state.slot=t;
+  const tr=TRIPS.find(x=>x.dep===t);
+  if(tr)state.trip=tr;
+  state.seats=[];
+  document.querySelectorAll('#slotList .slot').forEach(el=>el.classList.toggle('on',el.textContent.trim().startsWith(t)));
+  renderSeats();
+}
+function renderSeats(){
+  document.getElementById('seatGrid').innerHTML=SEATMAP.flat().map(s=>{
+    if(s==='GAP')return '<div class="seat gap"></div>';
+    if(s==='DRV')return '<div class="seat drv">คนขับ</div>';
+    const tk=TAKEN.includes(s),sel=state.seats.includes(s);
+    return `<div class="seat${tk?' taken':(sel?' sel':'')}" onclick="${tk?'':`tapSeat('${s}')`}">${s}</div>`;
+  }).join('');
+  const n=state.seats.length,price=state.trip?state.trip.price:0;
+  document.getElementById('seatCnt').textContent=n+' ที่นั่ง';
+  document.getElementById('seatTotal').textContent='฿'+(n*price);
+  document.getElementById('seatSum').innerHTML=`เส้นทาง: ${state.from} - ${state.to} &nbsp; วันที่ ${state.date} &nbsp; ที่นั่ง : ${state.seats.join(',')||'-'}`;
+}
+function tapSeat(s){
+  const i=state.seats.indexOf(s);
+  if(i>=0)state.seats.splice(i,1);
+  else{ if(state.seats.length>=8)return toast('เลือกได้สูงสุด 8 ที่นั่ง'); state.seats.push(s); }
+  renderSeats();
+}
+
+/* ================= PROMPTPAY ================= */
+function _crc(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF;}return c.toString(16).toUpperCase().padStart(4,'0');}
+function _tlv(id,v){return id+String(v.length).padStart(2,'0')+v;}
+function ppPayload(id,amt){
+  id=(id||'').replace(/[^0-9]/g,'');
+  let acc = id.length===13?_tlv('02',id):(id.length===10?_tlv('01','0066'+id.substring(1)):_tlv('01',id));
+  const mer=_tlv('29',_tlv('00','A000000677010111')+acc);
+  let s=_tlv('00','01')+_tlv('01',amt?'12':'11')+mer+_tlv('53','764')+(amt?_tlv('54',Number(amt).toFixed(2)):'')+_tlv('58','TH');
+  s+='6304';return s+_crc(s);
+}
+/* ---- QR encoder (self-contained, ECC level M) ---- */
+function makeQR(str){
+  var ECB={1:[10,1,16,0,0],2:[16,1,28,0,0],3:[26,1,44,0,0],4:[18,2,32,0,0],5:[24,2,43,0,0],
+    6:[16,4,27,0,0],7:[18,4,31,0,0],8:[22,2,38,2,39],9:[22,3,36,2,37],10:[26,4,43,1,44],
+    11:[30,1,50,4,51],12:[22,6,36,2,37],13:[22,8,37,1,38],14:[24,4,40,5,41],15:[24,5,41,5,42],
+    16:[28,7,45,3,46],17:[28,10,46,1,47],18:[26,9,43,4,44],19:[26,3,44,11,45],20:[26,3,41,13,42]};
+  var ALIGN={1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],
+    10:[6,28,50],11:[6,30,54],12:[6,32,58],13:[6,34,62],14:[6,26,46,66],15:[6,26,48,70],
+    16:[6,26,50,74],17:[6,30,54,78],18:[6,30,56,82],19:[6,30,58,86],20:[6,34,62,90]};
+  var FMT=[0x5412,0x5125,0x5E7C,0x5B4B,0x45F9,0x40CE,0x4F97,0x4AA0];
+  var VER={7:0x07C94,8:0x085BC,9:0x09A99,10:0x0A4D3,11:0x0BBF6,12:0x0C762,13:0x0D847,14:0x0E60D,
+    15:0x0F928,16:0x10B78,17:0x1145D,18:0x12A17,19:0x13532,20:0x149A6};
+
+  /* --- utf8 bytes --- */
+  var data=[];
+  for(var i=0;i<str.length;i++){
+    var c=str.charCodeAt(i);
+    if(c<0x80)data.push(c);
+    else if(c<0x800){data.push(0xC0|c>>6,0x80|c&63);}
+    else if(c<0xD800||c>=0xE000){data.push(0xE0|c>>12,0x80|(c>>6&63),0x80|c&63);}
+    else{i++;var cp=0x10000+((c&0x3FF)<<10)+(str.charCodeAt(i)&0x3FF);
+      data.push(0xF0|cp>>18,0x80|(cp>>12&63),0x80|(cp>>6&63),0x80|cp&63);}
+  }
+  /* --- choose version --- */
+  var ver=0,cap=0;
+  for(var v=1;v<=20;v++){
+    var e=ECB[v],dc=e[1]*e[2]+e[3]*e[4];
+    var cci=v<10?8:16;
+    if(dc*8 >= 4+cci+data.length*8){ver=v;cap=dc;break;}
+  }
+  if(!ver)throw new Error('data too long');
+  var ecb=ECB[ver],ecLen=ecb[0],cci=ver<10?8:16;
+
+  /* --- bit stream --- */
+  var bits=[];
+  function put(val,len){for(var i=len-1;i>=0;i--)bits.push((val>>i)&1);}
+  put(4,4); put(data.length,cci);
+  for(var i=0;i<data.length;i++)put(data[i],8);
+  var rem=cap*8-bits.length;
+  put(0,Math.min(4,rem));
+  while(bits.length%8)bits.push(0);
+  var bytes=[];
+  for(var i=0;i<bits.length;i+=8){var b=0;for(var j=0;j<8;j++)b=(b<<1)|bits[i+j];bytes.push(b);}
+  var pad=[0xEC,0x11],pi=0;
+  while(bytes.length<cap)bytes.push(pad[pi++%2]);
+
+  /* --- galois --- */
+  var EXP=new Array(512),LOG=new Array(256),x=1;
+  for(var i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=0x11D;}
+  for(var i=255;i<512;i++)EXP[i]=EXP[i-255];
+  function gmul(a,b){return (a===0||b===0)?0:EXP[LOG[a]+LOG[b]];}
+  function genPoly(n){var g=[1];for(var i=0;i<n;i++){var ng=new Array(g.length+1).fill(0);
+    for(var j=0;j<g.length;j++){ng[j]^=gmul(g[j],1);ng[j+1]^=gmul(g[j],EXP[i]);}g=ng;}return g;}
+  function rs(block,n){var g=genPoly(n),res=block.concat(new Array(n).fill(0));
+    for(var i=0;i<block.length;i++){var f=res[i];if(f===0)continue;
+      for(var j=0;j<g.length;j++)res[i+j]^=gmul(g[j],f);}
+    return res.slice(block.length);}
+
+  /* --- split blocks --- */
+  var blocks=[],ecs=[],off=0;
+  for(var k=0;k<ecb[1];k++){var b=bytes.slice(off,off+ecb[2]);off+=ecb[2];blocks.push(b);ecs.push(rs(b,ecLen));}
+  for(var k=0;k<ecb[3];k++){var b=bytes.slice(off,off+ecb[4]);off+=ecb[4];blocks.push(b);ecs.push(rs(b,ecLen));}
+  var maxD=Math.max(ecb[2],ecb[4]||0),final=[];
+  for(var i=0;i<maxD;i++)for(var k=0;k<blocks.length;k++)if(i<blocks[k].length)final.push(blocks[k][i]);
+  for(var i=0;i<ecLen;i++)for(var k=0;k<ecs.length;k++)final.push(ecs[k][i]);
+
+  /* --- matrix --- */
+  var N=ver*4+17;
+  var m=[],res=[];
+  for(var i=0;i<N;i++){m.push(new Array(N).fill(null));res.push(new Array(N).fill(false));}
+  function setF(r,c,v){m[r][c]=v;res[r][c]=true;}
+  function finder(r,c){for(var i=-1;i<8;i++)for(var j=-1;j<8;j++){
+    var rr=r+i,cc=c+j;if(rr<0||cc<0||rr>=N||cc>=N)continue;
+    var on=(i>=0&&i<=6&&(j===0||j===6))||(j>=0&&j<=6&&(i===0||i===6))||(i>=2&&i<=4&&j>=2&&j<=4);
+    setF(rr,cc,on);}}
+  finder(0,0);finder(0,N-7);finder(N-7,0);
+  for(var i=8;i<N-8;i++){setF(6,i,i%2===0);setF(i,6,i%2===0);}
+  var ap=ALIGN[ver];
+  for(var a=0;a<ap.length;a++)for(var b=0;b<ap.length;b++){
+    var r=ap[a],c=ap[b];
+    if((r<9&&c<9)||(r<9&&c>N-10)||(r>N-10&&c<9))continue;
+    for(var i=-2;i<=2;i++)for(var j=-2;j<=2;j++)
+      setF(r+i,c+j,Math.max(Math.abs(i),Math.abs(j))!==1);}
+  setF(N-8,8,true);
+  for(var i=0;i<9;i++){if(i!==6){setF(8,i,false);setF(i,8,false);}}
+  for(var i=0;i<8;i++){setF(8,N-1-i,false);setF(N-1-i,8,false);}
+  if(ver>=7){for(var i=0;i<18;i++){var r=Math.floor(i/3),c=i%3;setF(N-11+c,r,false);setF(r,N-11+c,false);}}
+
+  /* --- place data --- */
+  var idx=0,bitIdx=0,dir=-1,row=N-1;
+  for(var col=N-1;col>0;col-=2){
+    if(col===6)col--;
+    while(true){
+      for(var k=0;k<2;k++){
+        var c=col-k;
+        if(!res[row][c]){
+          var dark=false;
+          if(idx<final.length)dark=((final[idx]>>(7-bitIdx))&1)===1;
+          m[row][c]=dark;
+          bitIdx++;if(bitIdx===8){bitIdx=0;idx++;}
+        }
+      }
+      row+=dir;
+      if(row<0||row>=N){row-=dir;dir=-dir;break;}
+    }
+  }
+  /* --- mask + format --- */
+  function maskFn(k,r,c){switch(k){
+    case 0:return (r+c)%2===0; case 1:return r%2===0; case 2:return c%3===0;
+    case 3:return (r+c)%3===0; case 4:return (Math.floor(r/2)+Math.floor(c/3))%2===0;
+    case 5:return (r*c)%2+(r*c)%3===0; case 6:return ((r*c)%2+(r*c)%3)%2===0;
+    default:return ((r+c)%2+(r*c)%3)%2===0;}}
+  function penalty(g){
+    var p=0,i,j,run,k;
+    for(i=0;i<N;i++){run=1;for(j=1;j<N;j++){if(g[i][j]===g[i][j-1])run++;else{if(run>=5)p+=3+run-5;run=1;}}if(run>=5)p+=3+run-5;}
+    for(j=0;j<N;j++){run=1;for(i=1;i<N;i++){if(g[i][j]===g[i-1][j])run++;else{if(run>=5)p+=3+run-5;run=1;}}if(run>=5)p+=3+run-5;}
+    for(i=0;i<N-1;i++)for(j=0;j<N-1;j++){var v=g[i][j];if(v===g[i][j+1]&&v===g[i+1][j]&&v===g[i+1][j+1])p+=3;}
+    var pat=[true,false,true,true,true,false,true,false,false,false,false];
+    var pat2=[false,false,false,false,true,false,true,true,true,false,true];
+    for(i=0;i<N;i++)for(j=0;j<=N-11;j++){
+      var a=true,b=true;
+      for(k=0;k<11;k++){if(g[i][j+k]!==pat[k])a=false;if(g[i][j+k]!==pat2[k])b=false;}
+      if(a)p+=40; if(b)p+=40;}
+    for(j=0;j<N;j++)for(i=0;i<=N-11;i++){
+      var a=true,b=true;
+      for(k=0;k<11;k++){if(g[i+k][j]!==pat[k])a=false;if(g[i+k][j]!==pat2[k])b=false;}
+      if(a)p+=40; if(b)p+=40;}
+    var dark=0;for(i=0;i<N;i++)for(j=0;j<N;j++)if(g[i][j])dark++;
+    p+=Math.floor(Math.abs(dark*100/(N*N)-50)/5)*10;
+    return p;}
+
+  var best=null,bestP=Infinity,bestK=0;
+  for(var k=0;k<8;k++){
+    var g=[];for(var i=0;i<N;i++)g.push(m[i].slice());
+    for(var i=0;i<N;i++)for(var j=0;j<N;j++)if(!res[i][j]&&maskFn(k,i,j))g[i][j]=!g[i][j];
+    var f=FMT[k];
+    for(var i=0;i<15;i++){
+      var bit=((f>>i)&1)===1;
+      if(i<6)g[i][8]=bit; else if(i<8)g[i+1][8]=bit; else g[N-15+i][8]=bit;
+      if(i<8)g[8][N-1-i]=bit; else if(i===8)g[8][7]=bit; else g[8][14-i]=bit;
+    }
+    g[N-8][8]=true;
+    if(ver>=7){var vi=VER[ver];
+      for(var i=0;i<18;i++){var b=((vi>>i)&1)===1,r=Math.floor(i/3),c=i%3;
+        g[N-11+c][r]=b; g[r][N-11+c]=b;}}
+    var p=penalty(g);
+    if(p<bestP){bestP=p;best=g;bestK=k;}
+  }
+  return best;
+}
+function renderQR(el,text,size){
+  el.innerHTML='';
+  try{
+    var m=makeQR(text),n=m.length,q=4,t=n+q*2,s='';
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++) if(m[r][c]) s+='M'+(c+q)+' '+(r+q)+'h1v1h-1z';
+    el.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 '+t+' '+t+'" shape-rendering="crispEdges">'
+      +'<rect width="'+t+'" height="'+t+'" fill="#fff"/><path d="'+s+'" fill="#000"/></svg>';
+  }catch(e){
+    el.innerHTML='<div style="font-size:12px;color:#888;padding:10px;text-align:center">สร้าง QR ไม่สำเร็จ</div>';
+  }
+}
+function setPM(m){
+  state.pm=m;
+  document.querySelectorAll('.pm').forEach(el=>el.classList.toggle('on',el.dataset.m===m));
+  const pp=document.getElementById('ppCard'),ot=document.getElementById('otherCard');
+  if(m==='pp'){pp.style.display='';ot.style.display='none';}
+  else{
+    pp.style.display='none';ot.style.display='';
+    const T={bank:['โอนเงินธนาคาร','ธนาคารกรุงไทย · เลขที่บัญชี 987-6-54321-0<br>ชื่อบัญชี '+CONFIG.PROMPTPAY_NAME+'<br>โอนแล้วกด "ยืนยันชำระเงิน" และเก็บสลิปไว้แสดงต่อคนขับ'],
+      card:['บัตรเครดิต/เดบิต','รองรับ Visa · Mastercard · JCB<br>ชำระที่จุดขึ้นรถผ่านเครื่องรูดบัตรของคิวรถ<br>กด "ยืนยันชำระเงิน" เพื่อจองที่นั่งไว้ก่อน'],
+      cash:['เงินสด','ชำระเงินสดกับคนขับที่จุดขึ้นรถ<br>กรุณาถึงก่อนเวลาออกรถ 15 นาที<br>กด "ยืนยันชำระเงิน" เพื่อจองที่นั่งไว้']};
+    document.getElementById('otherTitle').textContent=T[m][0];
+    document.getElementById('otherText').innerHTML=T[m][1];
+  }
+  const amt=state.seats.length*(state.trip?state.trip.price:0);
+  document.getElementById('payAmt2').textContent='฿'+amt;
+}
+function goPayment(){
+  if(!state.seats.length)return toast('กรุณาเลือกที่นั่งอย่างน้อย 1 ที่');
+  const amt=state.seats.length*state.trip.price;
+  document.getElementById('payName').textContent=CONFIG.PROMPTPAY_NAME;
+  document.getElementById('payAmt').textContent='฿'+amt;
+  setPM(state.pm);
+  renderQR(document.getElementById('ppqr'),ppPayload(CONFIG.PROMPTPAY_ID,amt),180);
+  go('payment');
+}
+function sendToSheet(b){
+  if(!CONFIG.SHEET_ENDPOINT)return;
+  try{fetch(CONFIG.SHEET_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)});}catch(e){}
+}
+function completePayment(){
+  const amt=state.seats.length*state.trip.price;
+  const code=(state.from.substring(0,1)==='ย'?'YL':'PT')+'-'+Math.floor(100000+Math.random()*900000);
+  const b={code,from:state.from,to:state.to,date:state.date,time:state.trip.dep,arr:state.trip.arr,
+    seats:state.seats.slice(),pax:state.seats.length,price:amt,drv:state.trip.drv,
+    name:(currentUser&&currentUser.name)||'ผู้เยี่ยมชม',email:(currentUser&&currentUser.email)||'',
+    pm:state.pm,status:'ชำระเงินเรียบร้อยแล้ว',ts:Date.now()};
+  bookings.unshift(b);saveBk();sendToSheet(b);
+  showTicket(b);toast('จองสำเร็จ! 🎉');
+}
+function showTicket(b){
+  document.getElementById('tkRoute').textContent=b.from+' - '+b.to;
+  document.getElementById('tkDate').textContent=b.date;
+  document.getElementById('tkSeats').textContent=b.seats.join(',');
+  document.getElementById('tkTime').textContent=b.time+' น.';
+  document.getElementById('tkName').textContent=b.name;
+  document.getElementById('tkCode').textContent=b.code;
+  renderQR(document.getElementById('tkQR'),b.code+'|'+b.from+'-'+b.to+'|'+b.date+'|'+b.seats.join(','),140);
+  go('ticket');
+}
+function downloadTicket(){
+  const b=bookings[0];if(!b)return toast('ยังไม่มีตั๋ว');
+  const txt=`ตั๋วรถตู้ VanGo\nรหัสจอง: ${b.code}\nเส้นทาง: ${b.from} - ${b.to}\nวันที่: ${b.date}\nเวลา: ${b.time} น.\nที่นั่ง: ${b.seats.join(',')}\nผู้โดยสาร: ${b.name}\nราคา: ${b.price} บาท\nสถานะ: ${b.status}`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download='ticket-'+b.code+'.txt';a.click();toast('ดาวน์โหลดตั๋วแล้ว');
+}
+function shareTicket(){
+  const b=bookings[0];if(!b)return toast('ยังไม่มีตั๋ว');
+  const txt=`ตั๋วรถตู้ VanGo ${b.code}\n${b.from} - ${b.to} ${b.date} ${b.time} น.\nที่นั่ง ${b.seats.join(',')}`;
+  if(navigator.share)navigator.share({title:'ตั๋วรถตู้ VanGo',text:txt}).catch(()=>{});
+  else{try{navigator.clipboard.writeText(txt);toast('คัดลอกข้อมูลตั๋วแล้ว');}catch(e){toast('แชร์ไม่สำเร็จ');}}
+}
+
+/* ================= HISTORY ================= */
+function renderHistory(){
+  const el=document.getElementById('histList');
+  if(!bookings.length){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M7 2h10a2 2 0 0 1 2 2v18l-7-4-7 4V4a2 2 0 0 1 2-2Z"/></svg><div>ยังไม่มีประวัติการเดินทาง</div><div style="font-size:12px;margin-top:4px">เริ่มค้นหาเที่ยวรถได้เลย</div></div>';return;}
+  el.innerHTML=bookings.map(b=>`
+    <div class="hcard">
+      <div class="v"><svg viewBox="0 0 24 18"><path d="M2 13V8l2-5h14l2 5v5a1 1 0 0 1-1 1h-1v2h-2v-2H8v2H6v-2H5a1 1 0 0 1-1-1zm3-8-1 3h14l-1-3zM6 12a1.3 1.3 0 1 0 0-2.6A1.3 1.3 0 0 0 6 12Zm10 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6Z"/></svg></div>
+      <div class="m">
+        <div class="rt">${b.from} <svg viewBox="0 0 24 12"><path d="M14 0l8 6-8 6V8H0V4h14z"/></svg> ${b.to}</div>
+        <div class="d1">${b.date} - ${b.time} - ${b.pax}คน - ${b.price}฿</div>
+        <div class="d2">${b.code} · คนขับ ${b.drv}</div>
+      </div>
+      <a class="hcall" href="tel:0933754604"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1z"/></svg></a>
+    </div>`).join('');
+}
+function sendParcel(){
+  const f=(document.getElementById('pcFrom').value||'').trim(),t=(document.getElementById('pcTo').value||'').trim();
+  const n=(document.getElementById('pcName').value||'').trim(),tel=(document.getElementById('pcTel').value||'').trim();
+  if(!f||!t)return toast('กรุณากรอกต้นทางและปลายทาง');
+  if(!n)return toast('กรุณากรอกชื่อผู้รับ');
+  if(!/^0[0-9]{8,9}$/.test(tel))return toast('เบอร์ผู้รับไม่ถูกต้อง');
+  toast('แจ้งส่งพัสดุแล้ว — คิวรถจะติดต่อกลับ');
+  ['pcFrom','pcTo','pcName','pcTel'].forEach(i=>document.getElementById(i).value='');
+}
+
+/* ================= NAV ================= */
+const NAV=[
+ ['home','M12 3 2 12h3v8h6v-5h2v5h6v-8h3z'],
+ ['ticket','M4 6h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8a2 2 0 0 1 2-2Z'],
+ ['payment','M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1H2zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm3 5v2h5v-2z'],
+ ['bookings','M6 2h12v20l-3-2-3 2-3-2-3 2zm2 4v2h8V6zm0 4v2h8v-2zm0 4v2h5v-2z'],
+ ['notify','M12 22a2.2 2.2 0 0 0 2.2-2.2H9.8A2.2 2.2 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5.5-6.83V3.5a1.5 1.5 0 0 0-3 0v.67A7 7 0 0 0 5 11v5l-2 2v1h18v-1z'],
+ ['profile','M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z']
+];
+function navHTML(active){
+  return NAV.map(([id,d])=>{
+    const on=id===active?'on':'';
+    let fn=`go('${id}')`;
+    if(id==='ticket')fn=bookings.length?`showTicket(bookings[0])`:`toast('ยังไม่มีตั๋ว — จองเที่ยวรถก่อน');search()`;
+    if(id==='payment')fn=`state.trip?go('payment'):(toast('เลือกเที่ยวรถก่อนชำระเงิน'),search())`;
+    if(id==='bookings')fn=`go('bookings');renderHistory()`;
+    return `<button class="ni ${on}" onclick="${fn}"><svg viewBox="0 0 24 24"><path d="${d}"/></svg></button>`;
+  }).join('');
+}
+function syncNav(id){
+  ['home','results','seats','payment','ticket','bookings','notify','profile','logoutv','security','parcel','contact'].forEach(v=>{
+    const n=document.getElementById('nav-'+v);
+    if(n)n.innerHTML=navHTML(id==='ticket'?'ticket':(id==='bookings'?'bookings':id));
+  });
+}
+
+/* ================= BOOT ================= */
+initHome();syncNav('home');loadFB();
+(function(){
+  try{const s=JSON.parse(localStorage.getItem('vgSession')||'null');if(s&&s.name)currentUser=s;}catch(e){}
+  paintUser();updateAuthMenu();
+})();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
